@@ -11,8 +11,10 @@ Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Cus
 - After sign-in, prompt for a first name when none has been saved. Require saving the name or signing out; a role label or email is not treated as a name.
 - Keep name edits separate from authorization. Existing server checks still protect memberships and sole-owner access.
 - Handle invalid or unchanged business selections without clearing the current workspace.
-- Verification: 53 automated checks pass. Live desktop and phone review pending deployment.
-- Deployment: pending.
+- Verification: 53 automated checks pass; the affected sign-in/workspace suites were rerun after wording changes (40 passed). Live desktop and 390 × 844 phone views reviewed. Saved first name loaded into the greeting and account button.
+- Deployment: live on granlakou.app.
+- Commit: 9fbdd313e13ab2629aeccfcf02764e84f2a9281f.
+- Deployment ID: bbaca995-83d4-4987-bc83-1cbea5ce053d.
 
 ## 2026-11-07 — Remove sample link
 
