@@ -2,6 +2,15 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-11 — Staff access controls and email confirmation
+
+- Add explicit Revoke access and Restore access actions, with confirmation, per workspace. Keep the Super Admin protected and preserve delivery/payment history.
+- Add Resend invitation for unconfirmed staff and Send sign-in code for verified accounts. Neither action deletes or recreates an existing account.
+- Record staff name, role and active-status changes with actor, time and before/after values; show recent access history to the Super Admin. Recheck membership while the app is open.
+- Add a thank-you page that verifies the invitation token with Supabase; invalid or expired links offer sign-in. Strip the token from the URL and disable referrers/caching on the callback.
+- Correct Supabase Site URL from localhost to the live domain, and use an explicit live confirmation callback for invitations.
+- Verification: 13 focused automated checks pass; database rollback checks cover revoke/restore, owner protection, stale updates, live membership and audit privacy. No real staff access or delivery records changed during testing; no test emails sent.
+
 ## 2026-11-07 — Workspace header, first-name onboarding and general business copy
 
 - Replace family-specific sign-in wording with general delivery-workspace copy.

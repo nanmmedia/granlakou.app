@@ -12,3 +12,11 @@
 
 /config.js
   Cache-Control: no-cache
+
+/confirmed.html
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+
+/confirmed
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
