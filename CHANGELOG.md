@@ -2,6 +2,14 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-11 — Nearby-stop planning, address fallback and driver privacy
+
+- Plan around explicit deadlines and road travel, allowing nearby stops between priority deliveries when time permits. Preserve the planned order instead of moving all priority tags back to the top. Flag estimated deadline misses; include kitchen return and assume three minutes per stop.
+- Replace Add Delivery with Add Order. Driver-only accounts have no add-order controls, customer directory, catalog or business-wide payment totals, and see only their own activity.
+- Add a server-authorized driver view: active day only, own/reserved stops and available unclaimed stops, with unclaimed amounts redacted until claimed. Block raw access to historical orders, catalog and activity. Broader order roles retain their existing workspace view.
+- Missing Photon house numbers no longer imply an invalid address. Offer an explicit, authenticated US Census address-range lookup, retaining manual map-pin confirmation when no match exists. Preserve the entered address until a staff member selects a result.
+- Verification: 36 automated checks pass, including the nearby-versus-tight-deadline examples and driver UI limits. Database rollback checks verify redaction, historical privacy, own collection amounts and multi-role access. No real staff roles or order/payment records changed in tests.
+
 ## 2026-11-11 — Driver handoff with food acceptance
 
 - Add selected-stop handoffs to an active, email-confirmed replacement driver. Drivers transfer their claimed/reserved stops; Business Admins can also include unclaimed stops and arrange transfers for another driver.
