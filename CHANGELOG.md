@@ -9,6 +9,7 @@ Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Cus
 - Add a server-authorized driver view: active day only, own/reserved stops and available unclaimed stops, with unclaimed amounts redacted until claimed. Block raw access to historical orders, catalog and activity. Broader order roles retain their existing workspace view.
 - Missing Photon house numbers no longer imply an invalid address. Offer an explicit, authenticated US Census address-range lookup, retaining manual map-pin confirmation when no match exists. Preserve the entered address until a staff member selects a result.
 - Verification: 36 automated checks pass, including the nearby-versus-tight-deadline examples and driver UI limits. Database rollback checks verify redaction, historical privacy, own collection amounts and multi-role access. No real staff roles or order/payment records changed in tests.
+- Live desktop/phone checks confirm Add Order, the handoff draft and the missing-house-number fallback. A session running with the authenticated database role successfully claimed and completed a disposable order while raw business tables remained blocked. An end-to-end customer-address check with the alternate provider awaits user consent; no customer address has been sent to it.
 
 ## 2026-11-11 — Driver handoff with food acceptance
 
