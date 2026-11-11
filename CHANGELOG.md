@@ -2,6 +2,16 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-11 — Driver handoff with food acceptance
+
+- Add selected-stop handoffs to an active, email-confirmed replacement driver. Drivers transfer their claimed/reserved stops; Business Admins can also include unclaimed stops and arrange transfers for another driver.
+- Require a collection location and reason. Pause selected stops until the recipient accepts, declines or the sender cancels. Acceptance requires confirmation that the food was received.
+- After acceptance, reserve the stops for the replacement. They start and complete each delivery separately; previous drivers cannot claim or complete them.
+- Share an account-protected link through Share, WhatsApp or SMS. Links never grant staff access. Refresh handoff state while the dashboard is open and record each decision in day activity.
+- Preserve completed deliveries, item prices and payments. Include rollback-only database verification and eight handoff UI checks; all 21 available automated checks pass.
+- Also stop the delivery list from stretching below the kitchen return row.
+- No real handoffs were created and no invitation/test messages were sent during development. Recipient email testing remains pending user selection.
+
 ## 2026-11-11 — Staff access controls and email confirmation
 
 - Add explicit Revoke access and Restore access actions, with confirmation, per workspace. Keep the Super Admin protected and preserve delivery/payment history.
