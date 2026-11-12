@@ -1,0 +1,13 @@
+begin;
+create temporary table message_test as select gen_random_uuid() as business,gen_random_uuid() as day,gen_random_uuid() as a,gen_random_uuid() as b,gen_random_uuid() as own_order,gen_random_uuid() as other_order;
+insert into auth.users(id,email,email_confirmed_at) select x,'message-rollback-'||x||'@example.invalid',now() from message_test t cross join lateral unnest(array[t.a,t.b]) x;
+insert into public.bjta_businesses(id,name) select business,'Message rollback fixture' from message_test;
+insert into public.bjta_staff(business_id,user_id,display_name,roles,active) select business,x,'Fixture driver',array['driver'],true from message_test t cross join lateral unnest(array[t.a,t.b]) x;
+select set_config('request.jwt.claim.sub',a::text,true) from message_test;
+insert into public.bjta_days(id,business_id,delivery_date,kitchen_address) select day,business,current_date,'Fixture kitchen' from message_test;
+insert into public.bjta_deliveries(id,day_id,details,status,claimed_by) select own_order,day,'{"name":"Example customer","address":"Fixture"}'::jsonb,'in_progress',a from message_test union all select other_order,day,'{"name":"Other customer","address":"Fixture"}'::jsonb,'in_progress',b from message_test;
+create temporary table message_before as select id,to_jsonb(d) as value from public.bjta_deliveries d where day_id=(select day from message_test);
+select public.gldd_record_message_prepared(own_order,'delay','whatsapp') from message_test;
+do $$declare t record;begin select * into t from message_test;begin perform public.gldd_record_message_prepared(t.other_order,'delay','sms');raise exception 'Driver prepared message for another claimed stop';exception when others then if sqlerrm not like '%outside your delivery access%' then raise;end if;end;begin perform public.gldd_record_message_prepared(t.own_order,'delivered','sms');raise exception 'Unfinished order got delivered message';exception when others then if sqlerrm not like '%Complete the delivery%' then raise;end if;end;if not exists(select 1 from public.bjta_events where delivery_id=t.own_order and action='customer_message_prepared' and actor_id=t.a and details->>'sent'='false') then raise exception 'Prepared audit missing or falsely marked sent';end if;if exists(select 1 from message_before old join public.bjta_deliveries d on d.id=old.id where old.value is distinct from to_jsonb(d)) then raise exception 'Message preparation changed delivery data';end if;end$$;
+select 'PASS: own driver message preparation logged, other claimed stop blocked, premature completion message blocked, no sent claim and no delivery/payment mutations; rollback only' as verification;
+rollback;

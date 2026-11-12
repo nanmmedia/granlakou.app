@@ -11,19 +11,19 @@
 - Driver-only data limits: no business sales totals, historical customer directory or catalog; own activity and collection amounts.
 - Business settings and Super Admin business creation, including each workspace's defaults.
 
-## Next: delivery-day summary
+## Built: delivery-day summary
 
-- Show delivered, cancelled and outstanding orders.
-- Show recorded payments by Cash, Zelle and Cash App to authorized order/management roles.
-- Keep driver-only screens focused on their stops and own work.
+- Delivered, cancelled and outstanding orders for current or archived delivery days.
+- Recorded payments by Cash, Zelle and Cash App for authorized order/management roles.
+- Driver-only screens stay focused on their stops and own work.
 
-## Then: customer message templates
+## Built: customer update templates
 
 - Delay/apology, on the way, reschedule and delivery-complete messages.
-- Open the selected message in WhatsApp or SMS for a staff member to review and send.
-- Distinguish a prepared message from a confirmed sent message.
+- Editable text with the customer first name, business identity and an optional staff-entered estimate.
+- Preparation is logged; a staff member reviews and sends through WhatsApp or SMS. Sending is not falsely reported as confirmed.
 
-## Delivery-day rehearsal
+## Next: delivery-day rehearsal
 
 - Use two approved accounts and test orders to rehearse handoff through paid delivery and receipt.
 - Compare the optional alternate address provider after consent to submit the chosen address.

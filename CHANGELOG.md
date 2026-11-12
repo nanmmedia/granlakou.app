@@ -2,6 +2,15 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-11 — Day summary and customer update templates
+
+- Add a business-scoped day summary for authorized order/management roles, including archived days, completed/cancelled/remaining orders and recorded payments by Cash, Zelle and Cash App.
+- Keep financial totals out of driver-only views. Reconcile payment totals even when a legacy method is missing or a cancelled order has a recorded payment.
+- Add personalized delay/apology, on-the-way, rescheduling and delivered message templates, with editable text and optional staff-entered estimates.
+- Prepare customer updates before opening WhatsApp/SMS or copying text. Record preparation in activity without claiming a message was sent or changing order/payment status.
+- Keep phone navigation labels readable with horizontal scrolling as the roadmap gains screens.
+- Validation: 67 automated checks pass, plus rollback database checks for customer-message authorization, accurate preparation logs and unchanged delivery/payment records. No customer messages were sent during testing.
+
 ## 2026-11-11 — Contact fields and business settings
 
 - Display US phone numbers as (317) 555-0123, save country-coded numbers for WhatsApp/SMS, preserve international country codes, and flag incomplete input.
