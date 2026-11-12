@@ -2,6 +2,11 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-11 — Clearer phone order action
+
+- Rename the floating action to + New Order and give it a wider lime button.
+- Separate menu buttons with small gaps; use a subtle white active-tab treatment so navigation and order creation have distinct appearances.
+
 ## 2026-11-11 — Stop-to-stop mileage and phone navigation
 
 - Put the personal greeting before the workspace selector; move Add Order beside the profile and make the GLDD logo return to Today's run and refresh the list.
