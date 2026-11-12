@@ -67,3 +67,4 @@ let authUser=null,supabaseClient=null;
 async function signInPanel(){if(typeof openAuthPage==='function'){await openAuthPage();return;}modal('Staff sign-in',`<div class="form-body"><p>Staff sign-in is being configured.</p></div>`);}
 async function initAuth(){if(supabaseClient)return supabaseClient;const cfg=window.BJTA_CONFIG||{};if(!cfg.supabaseUrl||!cfg.supabasePublishableKey)return null;const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.102.0/+esm');supabaseClient=createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});return supabaseClient;}
 if(!window.BJTA_CONFIG?.supabaseUrl)render();
+installContactAddressSelection();

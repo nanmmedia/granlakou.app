@@ -1,0 +1,15 @@
+begin;
+create temporary table workspace_test as select gen_random_uuid() as driver,(select user_id from gldd_private.app_owner limit 1) as owner;
+insert into auth.users(id,email,email_confirmed_at) select driver,'workspace-rollback-'||driver||'@example.invalid',now() from workspace_test;
+select set_config('request.jwt.claim.sub',owner::text,true) from workspace_test;
+create temporary table workspace_created as select w.* from public.gldd_save_workspace(null,'Workspace rollback '||gen_random_uuid(),'Example Foods','',12.50,'google') w;
+do $$declare b uuid;begin select id into b from workspace_created;if not exists(select 1 from public.bjta_staff s join workspace_test t on s.user_id=t.owner where s.business_id=b and s.active and s.roles @> array['business_admin','order_staff','driver']) then raise exception 'Owner membership missing';end if;if not exists(select 1 from workspace_created where settings->>'delivery_fee'='12.50' and settings->>'maps'='google') then raise exception 'Workspace defaults not stored';end if;end$$;
+insert into public.bjta_staff(business_id,user_id,display_name,roles,active) select b.id,t.driver,'Fixture driver',array['driver'],true from workspace_created b cross join workspace_test t;
+select set_config('request.jwt.claim.sub',driver::text,true) from workspace_test;
+do $$declare b uuid;begin select id into b from workspace_created;begin perform public.gldd_save_workspace(b,'Forbidden','Forbidden','',5,'apple');raise exception 'Driver changed settings';exception when others then if sqlerrm not like '%Workspace Admin access required%' then raise;end if;end;begin perform public.gldd_save_workspace(null,'Forbidden','Forbidden','',5,'apple');raise exception 'Driver created workspace';exception when others then if sqlerrm not like '%Only Super Admin%' then raise;end if;end;end$$;
+update public.bjta_staff set roles=array['business_admin'] where user_id=(select driver from workspace_test);
+update public.bjta_businesses set settings=settings||'{"keep_me":true}'::jsonb where id=(select id from workspace_created);
+select (public.gldd_save_workspace(id,'Updated rollback '||id,'Example Foods Updated','123 Example St, Indianapolis, IN 46214',7.50,'apple')).id from workspace_created;
+do $$declare b uuid;begin select id into b from workspace_created;if not exists(select 1 from public.bjta_businesses where id=b and settings->>'keep_me'='true' and settings->>'delivery_fee'='7.50') then raise exception 'Settings merge lost data';end if;if (select count(*) from public.gldd_workspace_events where business_id=b)<>2 then raise exception 'Settings audit missing';end if;begin perform public.gldd_save_workspace(null,'Forbidden','Forbidden','',5,'apple');raise exception 'Business Admin created workspace';exception when others then if sqlerrm not like '%Only Super Admin%' then raise;end if;end;end$$;
+select 'PASS: Super Admin creates workspaces and gets membership; driver cannot manage; Business Admin edits own workspace but cannot create; defaults and audit preserved; rollback only' as verification;
+rollback;

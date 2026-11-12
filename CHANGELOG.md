@@ -2,6 +2,15 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-11 — Contact fields and business settings
+
+- Display US phone numbers as (317) 555-0123, save country-coded numbers for WhatsApp/SMS, preserve international country codes, and flag incomplete input.
+- Split customer and kitchen addresses into street, city, state and ZIP. Join a full address automatically for lookup, mileage, storage and navigation. Reopen legacy addresses and preserve confirmed map points when only formatting changes.
+- Keep the signed-in first name and show the verified account email underneath instead of the role label.
+- Move the workspace picker below the main header. Add Business settings for Business Admins and Add business for the sole Super Admin, using the existing authorized server operation and settings audit.
+- Support workspace receipt names, default delivery fees, kitchen and Maps preferences. Save receipt business identity with new orders; retain legacy BJTA receipt identity. A current run keeps its kitchen and navigation choice.
+- Validation: 54 automated checks pass; rollback-only workspace permission tests pass. No real staff access, workspace settings or order records were changed during testing.
+
 ## 2026-11-11 — Nearby-stop planning, address fallback and driver privacy
 
 - Plan around explicit deadlines and road travel, allowing nearby stops between priority deliveries when time permits. Preserve the planned order instead of moving all priority tags back to the top. Flag estimated deadline misses; include kitchen return and assume three minutes per stop.
