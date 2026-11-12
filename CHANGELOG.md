@@ -2,6 +2,14 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-11 — Stop-to-stop mileage and phone navigation
+
+- Put the personal greeting before the workspace selector; move Add Order beside the profile and make the GLDD logo return to Today's run and refresh the list.
+- Add role-aware floating phone navigation. Driver-only accounts retain Run, My activity and Account, without order creation or business totals.
+- Store each planned A-to-B leg's road miles and duration separately from kitchen mileage. Replan from the current stop or latest completed stop on each route, with a kitchen return included in optimization.
+- Save routing fields in one transaction, recheck addresses/priorities/deadlines, and preserve unrelated edits. Started/completed orders stay locked. Log successful route planning with the staff identity and time.
+- Validation: 72 automated checks pass; rollback-only database checks verify route-only merging, all-or-nothing stale-plan rejection and denial without order access. No real orders, staff roles or customer messages changed during tests.
+
 ## 2026-11-11 — Day summary and customer update templates
 
 - Add a business-scoped day summary for authorized order/management roles, including archived days, completed/cancelled/remaining orders and recorded payments by Cash, Zelle and Cash App.

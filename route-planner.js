@@ -12,7 +12,9 @@ var RoutePlanner=(()=>{
   for(let round=0;round<8;round++){let improved=best;for(let a=0;a<best.route.length-1;a++)for(let b=a+1;b<best.route.length;b++){const route=[...best.route.slice(0,a),...best.route.slice(a,b+1).reverse(),...best.route.slice(b+1)],candidate=evaluate(route);if(Number.isFinite(candidate.drive)&&better(candidate,improved))improved=candidate;}if(improved===best)break;best=improved;}
   return best;
  }
+ function startForRoute(deliveries,driver){const same=deliveries.filter(d=>Number(d.driver)===driver),latest=(list,key)=>list.sort((a,b)=>String(b[key]||'').localeCompare(String(a[key]||'')))[0];return latest(same.filter(d=>d.status==='in_progress'),'startedAt')||latest(same.filter(d=>d.status==='delivered'),'completedAt')||null;}
+ function legs(route,distances,durations,start,origin){let from=start;return route.map(entry=>{const meters=distances[from]?.[entry.i],seconds=durations[from]?.[entry.i];if(!Number.isFinite(meters)||!Number.isFinite(seconds)||meters<0||seconds<0)throw Error('A route leg has no road estimate.');const leg={miles:meters/1609.344,seconds,kind:from===start?origin:'previous_stop'};from=entry.i;return leg;});}
  function clockLabel(seconds){const mins=Math.round(seconds/60),hours=Math.floor(mins/60)%24,m=mins%60;return `${hours%12||12}:${String(m).padStart(2,'0')} ${hours>=12?'PM':'AM'}${mins>=1440?' (next day)':''}`;}
- return {planBatch,compareRemaining,clockLabel,deadline};
+ return {startForRoute,legs,planBatch,compareRemaining,clockLabel,deadline};
 })();
 if(typeof module!=='undefined')module.exports=RoutePlanner;

@@ -6,6 +6,8 @@
 - Staff invitations, revoke/restore controls and access history.
 - Order item catalog, mixed-item orders, phone formatting and structured addresses.
 - Road-distance estimates, deadline/proximity planning and return to the kitchen.
+- A-to-B leg miles/time, current or last-completed route origins, and atomic route-only saves.
+- Greeting-first layout, header Add Order, GLDD home action and role-aware floating phone navigation.
 - Payment confirmation and receipts with saved item prices and business identity.
 - Selected-stop handoff, food acceptance, cancellation/decline, reserved assignments and audit events.
 - Driver-only data limits: no business sales totals, historical customer directory or catalog; own activity and collection amounts.
