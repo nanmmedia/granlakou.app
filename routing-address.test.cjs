@@ -18,3 +18,15 @@ test('unauthenticated lookup never contacts provider',async()=>{const f=lookupFi
 test('leg distances follow A to B to C, never reset to kitchen',()=>{const durations=matrix([0,10,11,30]),distances=durations.map(row=>row.map(x=>x*1609.344/60));const legs=planner.legs([{i:2},{i:3}],distances,durations,1,'current_stop');assert.deepEqual(legs.map(x=>Math.round(x.miles)),[1,19]);assert.deepEqual(legs.map(x=>x.kind),['current_stop','previous_stop']);});
 test('replanning selects current then last completed stop for the same route',()=>{const stops=[{id:'done',driver:1,status:'delivered',completedAt:'2026-11-11T12:00:00Z'},{id:'old',driver:1,status:'delivered',completedAt:'2026-11-11T11:00:00Z'},{id:'other',driver:2,status:'in_progress'},{id:'active',driver:1,status:'in_progress'}];assert.equal(planner.startForRoute(stops,1).id,'active');assert.equal(planner.startForRoute(stops.filter(x=>x.id!=='active'),1).id,'done');assert.equal(planner.startForRoute([],1),null);});
 test('missing leg estimate fails rather than displaying zero',()=>assert.throws(()=>planner.legs([{i:1}],[[0,null]],[[0,60]],0,'kitchen'),/no road estimate/));
+
+test('second driver starts farthest from the first driver’s recent stops',()=>{
+  const points={current:{lat:0,lon:0},recent:{lat:0,lon:5},nearRecent:{lat:0,lon:6},far:{lat:0,lon:-4}};
+  const orders=[{address:'current',status:'in_progress',driver:1,startedAt:'2026-11-13T12:00:00Z'},{address:'recent',status:'delivered',driver:1,completedAt:'2026-11-13T11:00:00Z'}];
+  const candidates=[{address:'nearRecent'},{address:'far'}];
+  assert.equal(planner.secondDriverStart(candidates,orders,address=>points[address],null).address,'far');
+});
+
+test('replanning honors the second driver’s assigned first stop',()=>{
+  const entries=[{i:1,d:{id:'near'}},{i:2,d:{id:'first'}}];
+  assert.equal(planner.planBatch(entries,matrix([0,1,10]),{firstId:'first'}).route[0].d.id,'first');
+});
