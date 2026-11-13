@@ -3,7 +3,7 @@ let sharedHandoffs=[],sharedDriverPeople=[],handoffLoadGeneration=0,handoffLinkH
 function sharedDriverLabel(id){return sharedDriverPeople.find(p=>p.id===id)?.name||sharedPerson(id);}
 function sharedPendingTransfer(id){return sharedHandoffs.find(h=>h.status==='pending'&&h.delivery_ids.includes(id));}
 function sharedStartable(d){return editable(d)&&(!d.assignedTo||d.assignedTo===authUser?.id);}
-function sharedHandoffCandidates(source){return sharedRows.filter(d=>d.day_id===sharedActiveDay()?.id&&!sharedPendingTransfer(d.id)&&((d.status==='in_progress'&&d.claimed_by===source)||(d.status==='ready'&&(d.assigned_to===source||(sharedCan('manage')&&!d.assigned_to)))));}
+function sharedHandoffCandidates(source){return sharedRows.filter(d=>d.day_id===sharedActiveDay()?.id&&d.details?.orderType!=='pickup'&&!sharedPendingTransfer(d.id)&&((d.status==='in_progress'&&d.claimed_by===source)||(d.status==='ready'&&(d.assigned_to===source||(sharedCan('manage')&&!d.assigned_to)))));}
 const sharedDeliveryBeforeHandoff=sharedDelivery;
 sharedDelivery=function(row,day){const d=sharedDeliveryBeforeHandoff(row,day);d.assignedTo=row.assigned_to||null;d.handoffId=sharedPendingTransfer(row.id)?.id||null;if(d.handoffId){d.originalStatus=d.status;d.status='waiting';}return d;};
 const sharedLoadBeforeHandoff=sharedLoad;

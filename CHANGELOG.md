@@ -2,6 +2,12 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-13 — Scheduled orders, pickups and PDF receipts
+
+- Open today or an upcoming date with its own kitchen address. Find past days in History.
+- Record pickups separately from delivery stops and complete them with payment and a receipt.
+- Share or download a PDF receipt from current orders and History.
+
 ## 2026-11-11 — Clearer phone order action
 
 - Rename the floating action to + New Order and give it a wider lime button.

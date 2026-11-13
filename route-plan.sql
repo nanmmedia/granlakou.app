@@ -10,7 +10,7 @@ begin
  perform 1 from public.bjta_deliveries d where d.day_id=day and d.id in(select (x->>'id')::uuid from jsonb_array_elements(plan) x) order by d.id for update;
  for item in select value from jsonb_array_elements(plan) loop
   select * into row_data from public.bjta_deliveries d where d.id=(item->>'id')::uuid and d.day_id=day;
-  if not found or row_data.status<>'ready' then raise exception 'A route stop was started, completed, or removed';end if;
+  if not found or row_data.status<>'ready' or row_data.details->>'orderType'='pickup' then raise exception 'A route stop was started, completed, or removed';end if;
   expected=item->'expected';routing=item->'routing';
   if row_data.details->'address' is distinct from expected->'address' or row_data.details->'priority' is distinct from expected->'priority' or row_data.details->'deadline' is distinct from expected->'deadline' or row_data.details->'location' is distinct from expected->'location' then raise exception 'Routing inputs changed; plan again';end if;
   if coalesce((routing->>'driver')::int,0) not in(1,2) or coalesce((routing->>'routeOrder')::int,-1)<0 or coalesce((routing#>>'{routeLeg,miles}')::numeric,-1)<0 or coalesce((routing#>>'{routeLeg,seconds}')::numeric,-1)<0 then raise exception 'Invalid route estimates';end if;

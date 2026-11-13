@@ -48,7 +48,7 @@ begin
  if stops is null or cardinality(stops) not between 1 and 100 or array_position(stops,null) is not null or cardinality(stops)<>(select count(distinct x) from unnest(stops) x) then raise exception 'Choose 1 to 100 different deliveries';end if;
  if coalesce(length(trim(issue)),0) not between 1 and 500 or coalesce(length(trim(meeting)),0) not between 1 and 300 then raise exception 'Add a reason and where to collect the food';end if;
  perform 1 from public.bjta_deliveries where id=any(stops) order by id for update;
- if (select count(*) from public.bjta_deliveries d where d.id=any(stops) and d.day_id=day and
+ if (select count(*) from public.bjta_deliveries d where d.id=any(stops) and d.day_id=day and coalesce(d.details->>'orderType','delivery')='delivery' and
    ((d.status='in_progress' and d.claimed_by=source_driver) or (d.status='ready' and (d.assigned_to=source_driver or (manager and d.assigned_to is null)))))<>cardinality(stops) then raise exception 'Some stops changed or belong to another driver. Refresh the list';end if;
  if exists(select 1 from public.gldd_handoffs where status='pending' and delivery_ids && stops) then raise exception 'A selected stop already has a pending handoff';end if;
  select jsonb_agg(jsonb_build_object('id',id,'status',status,'claimed_by',claimed_by,'assigned_to',assigned_to,'started_at',started_at)) into snapshot from public.bjta_deliveries where id=any(stops);
