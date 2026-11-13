@@ -120,3 +120,26 @@ async function sharedAssignSecondDriver(form, values) {
   });
   toast('Stops assigned. Plan remaining stops to refresh both routes.');
 }
+
+function sharedKitchenDefaultControl() {
+  if (!sharedCan('manage')) return '';
+  const day = sharedActiveDay();
+  const kitchen = sharedBusiness.settings?.kitchen;
+  if (!day || !kitchen || day.kitchen_address === kitchen) return '';
+  if (state.deliveries.some(order => isDeliveryStop(order) && ['in_progress', 'delivered'].includes(order.status))) return '';
+  return '<p class="help">Workspace default: ' + esc(kitchen) + '</p>' +
+    '<button class="button" data-action="useWorkspaceKitchen">Use workspace default</button> ';
+}
+
+async function sharedUseWorkspaceKitchen() {
+  const day = sharedActiveDay();
+  const kitchen = sharedBusiness.settings?.kitchen;
+  if (!sharedCan('manage') || !day || !kitchen) throw Error('Choose an open order day with a workspace kitchen.');
+  if (!confirm('Use ' + kitchen + ' for ' + day.delivery_date + '? Check the map location and plan the route again after switching.')) return;
+  await sharedRun(async () => {
+    await sharedRpc('gldd_use_workspace_kitchen', {day: day.id, expected_kitchen: day.kitchen_address});
+    delete state.locations[locationKey(kitchen)];
+    await sharedLoad();
+    toast('Kitchen updated for this day.');
+  });
+}
