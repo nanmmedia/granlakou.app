@@ -24,61 +24,95 @@ function pdfString(value) {
 
 function receiptPdf(order) {
   const pages = [];
+  const left = 54, right = 558, center = 306;
   let lines, y;
   function newPage() {
-    lines = [];
+    lines = ['1 1 1 rg 0 0 612 792 re f\n'];
     pages.push(lines);
-    y = 740;
+    y = 726;
   }
-  function line(text, size = 12, bold = false) {
-    if (y < 54) newPage();
-    lines.push('BT /' + (bold ? 'B' : 'R') + ' ' + size + ' Tf 0.09 0.24 0.21 rg 54 ' + y +
-      ' Td ' + pdfString(text) + ' Tj ET\n');
-    y -= size + 8;
+  function width(value, size) {
+    return Array.from(String(value).normalize('NFD').replace(/\p{Mark}/gu, ''))
+      .reduce((sum, char) => sum + (/[ilI.,' ]/.test(char) ? .27 : /[MWmw]/.test(char) ? .84 :
+        /[A-Z]/.test(char) ? .67 : .54), 0) * size;
   }
-  function wrapped(text, size = 12, bold = false) {
-    // Conservative width for Helvetica. Break long unspaced item names too.
-    const max = Math.floor(504 / (size * 0.95));
+  function wrap(value, size, maxWidth) {
+    const rows = [];
     let row = '';
-    for (const word of String(text).split(/\s+/)) {
-      if (row && row.length + word.length + 1 > max) {
-        line(row, size, bold);
+    for (const word of String(value).trim().split(/\s+/)) {
+      if (row && width(row + ' ' + word, size) > maxWidth) {
+        rows.push(row);
         row = '';
       }
-      let remaining = word;
-      while (remaining.length > max) {
-        line(remaining.slice(0, max), size, bold);
-        remaining = remaining.slice(max);
+      if (row) row += ' ';
+      for (const char of word) {
+        if (width(row + char, size) > maxWidth && row) {
+          rows.push(row);
+          row = '';
+        }
+        row += char;
       }
-      row += (row ? ' ' : '') + remaining;
     }
-    if (row) line(row, size, bold);
+    if (row) rows.push(row);
+    return rows;
   }
+  function text(value, x, baseline, {size = 13, font = 'R', color = '0.09 0.24 0.21', spacing = 0} = {}) {
+    lines.push('BT /' + font + ' ' + size + ' Tf ' + color + ' rg ' + spacing + ' Tc ' +
+      x.toFixed(2) + ' ' + baseline + ' Td ' + pdfString(value) + ' Tj ET\n');
+  }
+  function centered(value, size, font, spacing = 0, color) {
+    for (const row of wrap(value, size + spacing * 2, right - left - 12)) {
+      text(row, center - (width(row, size) + spacing * (row.length - 1)) / 2, y, {size, font, spacing, color});
+      y -= size + 9;
+    }
+  }
+  function rule(baseline) {
+    lines.push('q 0.81 0.85 0.78 RG 0.7 w [2 2] 0 d ' + left + ' ' + baseline +
+      ' m ' + right + ' ' + baseline + ' l S Q\n');
+  }
+  function row(label, value, emphasis = false) {
+    const size = emphasis ? 21 : 13;
+    const amountWidth = width(value, size);
+    const rows = wrap(label, size, right - left - amountWidth - 25);
+    for (const [index, part] of rows.entries()) {
+      if (y < 60) newPage();
+      text(part, left, y, {size, font: emphasis ? 'B' : 'R'});
+      if (!index) text(value, right - amountWidth, y, {size, font: emphasis ? 'B' : 'R'});
+      y -= size + 6;
+    }
+    if (!emphasis) rule(y + 5);
+    y -= emphasis ? 17 : 14;
+  }
+  const muted = '0.36 0.41 0.37';
   newPage();
-  wrapped(receiptBusinessName(order), 18, true);
-  line((state.demo ? 'SAMPLE ' : '') + (order.orderType === 'pickup' ? 'Pickup receipt' : 'Delivery receipt'), 22, true);
-  wrapped(order.receiptId + ' | ' + (order.day || state.settings.date));
-  wrapped('Customer: ' + order.name);
-  y -= 16;
+  centered((state.demo ? 'SAMPLE · ' : '') + receiptBusinessName(order), 11, 'B', 2);
+  y -= 13;
+  centered(customerThankYou(order.name), 30, 'T');
+  y -= 5;
+  centered(order.receiptId + ' · ' + (order.day || state.settings.date), 11, 'R', 0, muted);
+  centered(order.name, 11, 'R', 0, muted);
+  y -= 23;
   for (const item of orderItems(order)) {
-    wrapped(item.qty + ' × ' + item.name + ' @ ' + money(item.price) + ' = ' + money(item.qty * item.price));
+    row(item.qty + ' × ' + item.name, money(item.qty * item.price));
   }
-  if (order.orderType !== 'pickup') line('Delivery fee: ' + money(order.fee));
+  if (order.orderType !== 'pickup') row('Delivery fee', money(order.fee));
+  if (y < 185) newPage();
+  row('Total', money(total(order)), true);
+  row('Payment status', order.paid ? 'Paid' : 'Unpaid');
+  row('Payment method', order.method);
   y -= 8;
-  line('Total: ' + money(total(order)), 16, true);
-  line('Paid via ' + order.method);
-  y -= 12;
-  wrapped(customerThankYou(order.name));
+  centered('Payment recorded by staff.', 10, 'R', 0, muted);
 
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
-    '<< /Type /Pages /Count ' + pages.length + ' /Kids [' + pages.map((_, index) => (5 + index * 2) + ' 0 R').join(' ') + '] >>',
+    '<< /Type /Pages /Count ' + pages.length + ' /Kids [' + pages.map((_, index) => (6 + index * 2) + ' 0 R').join(' ') + '] >>',
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold /Encoding /WinAnsiEncoding >>'
   ];
   for (const page of pages) {
     const content = page.join('');
-    objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /R 3 0 R /B 4 0 R >> >> /Contents ' +
+    objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /R 3 0 R /B 4 0 R /T 5 0 R >> >> /Contents ' +
       (objects.length + 2) + ' 0 R >>');
     objects.push('<< /Length ' + content.length + ' >>\nstream\n' + content + 'endstream');
   }
