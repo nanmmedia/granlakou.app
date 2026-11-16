@@ -121,11 +121,6 @@ main#orderPage { width: min(100% - 32px, 900px); margin: 30px auto 64px; }
 }
 .order-schedule-row > .field:only-child { grid-column: 1 / -1; }
 .order-schedule-row input[name="orderDate"] { position: relative; cursor: pointer; min-width: 0; width: 100%; }
-.order-schedule-row input[name="orderDate"]::-webkit-calendar-picker-indicator {
-  position: absolute;
-  inset: 0;
-  width: auto;
-  height: auto;
-  background-position: right 12px center;
-  cursor: pointer;
+@media(max-width:420px) {
+  .order-schedule-row input[name="orderDate"] { padding-inline: 8px; }
 }
