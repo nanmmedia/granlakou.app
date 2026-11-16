@@ -87,3 +87,9 @@ main#orderPage { width: min(100% - 32px, 900px); margin: 30px auto 64px; }
   }
 }
 .order-form-error { color: #713d13; background: #fff0d5; padding: 12px; border-radius: 8px; }
+
+.more-menu { display: grid; gap: 18px; }
+.more-section { display: grid; gap: 4px; padding: 10px; background: #f1f5eb; border-radius: 13px; }
+.more-section h3 { color: #34534a; font-size: 13px; margin: 1px 8px 6px; }
+.more-section .button { min-height: 44px; width: 100%; text-align: left; justify-content: flex-start; padding-inline: 12px; border-color: transparent; }
+.more-section .button[data-action="signout"] { color: #713d13; }
