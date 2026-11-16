@@ -112,3 +112,20 @@ main#orderPage { width: min(100% - 32px, 900px); margin: 30px auto 64px; }
 }
 .day-plan-reminder { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px 14px; background: #f1f5eb; border-radius: 10px; }
 .planned-dates[hidden], .planned-dates button[hidden], [data-order-day-reminder][hidden] { display: none; }
+
+.order-schedule-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px;
+}
+.order-schedule-row > .field:only-child { grid-column: 1 / -1; }
+.order-schedule-row input[name="orderDate"] { position: relative; cursor: pointer; min-width: 0; width: 100%; }
+.order-schedule-row input[name="orderDate"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  background-position: right 12px center;
+  cursor: pointer;
+}

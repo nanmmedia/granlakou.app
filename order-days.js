@@ -222,7 +222,7 @@ function sharedDeliveryForm(id = '', customer = '', orderDate = (sharedSelectedD
     '<ol class="order-steps" aria-label="Order steps">' + steps + '</ol>' +
     '<form id="deliveryForm" class="order-page-form" novalidate data-id="' + esc(id) +
     '" data-day="' + esc(sharedActiveDay()?.id || '') + '" data-customer="' + esc(contact.customerId || contact.id || '') + '">' +
-    '<section data-order-step="1"><h2 tabindex="-1">Customer & delivery</h2>' + dateField + (id ? '' : plannedOrderDates()) + type + savedCustomers +
+    '<section data-order-step="1"><h2 tabindex="-1">Customer & delivery</h2>' + '<div class="order-schedule-row">' + dateField + type + '</div>' + (id ? '' : plannedOrderDates()) + savedCustomers +
     '<div class="order-fields-grid">' +
     field('Customer name', 'name', contact.name, 'text', 'required maxlength="100" autocomplete="name"') +
     field('Phone number', 'phone', formatContactPhone(contact.phone), 'tel', 'required maxlength="25" autocomplete="tel"') +
@@ -265,6 +265,16 @@ function sharedDeliveryForm(id = '', customer = '', orderDate = (sharedSelectedD
   };
   refreshPlannedDate();
   form.elements.orderDate?.addEventListener('input', refreshPlannedDate);
+  form.elements.orderDate?.addEventListener('click', event => {
+    const input = event.currentTarget;
+    if (typeof input.showPicker !== 'function') return;
+    try {
+      input.showPicker();
+      event.preventDefault();
+    } catch {
+      // Keep the browser's native date control available if showPicker is restricted.
+    }
+  });
   for (const button of form.querySelectorAll('[data-planned-order-date]')) button.addEventListener('click', () => {
     form.elements.orderDate.value = button.dataset.plannedOrderDate;
     refreshPlannedDate();
