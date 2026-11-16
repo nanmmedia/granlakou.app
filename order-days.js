@@ -252,13 +252,16 @@ function sharedDeliveryForm(id = '', customer = '', orderDate = (sharedSelectedD
   form.elements.orderType.value = order?.orderType || 'delivery';
 
   const refreshPlannedDate = () => {
-    const tag = form.querySelector('[data-planned-date-tag]');
     const reminder = form.querySelector('[data-order-day-reminder]');
-    if (!tag || !reminder) return;
-    const day = sharedDays.find(day => isPlannedDay(day) && day.delivery_date === form.elements.orderDate.value);
-    tag.hidden = !day;
-    reminder.textContent = day?.settings?.planReminder || '';
-    reminder.hidden = !reminder.textContent;
+    if (!reminder) return;
+    const selected = form.elements.orderDate.value;
+    const day = sharedDays.find(item => isPlannedDay(item) && item.delivery_date === selected);
+    reminder.textContent = day ? planReminderText(day) : '';
+    reminder.hidden = !day;
+    const dates = form.querySelector('.planned-dates');
+    const buttons = [...dates.querySelectorAll('[data-planned-order-date]')];
+    for (const button of buttons) button.hidden = button.dataset.plannedOrderDate === selected;
+    dates.hidden = buttons.every(button => button.hidden);
   };
   refreshPlannedDate();
   form.elements.orderDate?.addEventListener('input', refreshPlannedDate);
@@ -330,8 +333,8 @@ function plannedOrderDates() {
   if (!days.length) return '';
   const buttons = days.map(day => '<button type="button" class="button planned-tag" data-planned-order-date="' +
     esc(day.delivery_date) + '">' + esc(day.delivery_date) + '</button>').join('');
-  return '<div class="planned-dates"><span>Planned</span>' + buttons + '</div>' +
-    '<p class="order-date-state"><span class="planned-tag" data-planned-date-tag hidden>Planned</span></p><p class="day-plan-reminder" data-order-day-reminder hidden></p>';
+  return '<div class="planned-dates"><span>Planned dates</span>' + buttons + '</div>' +
+    '<p class="day-plan-reminder" data-order-day-reminder hidden></p>';
 }
 
 function sharedCancelDayForm() {
@@ -356,8 +359,14 @@ function isPlannedDay(day) {
   return Boolean(day && !day.archived && day.settings?.planned === true);
 }
 
+const DEFAULT_PLAN_REMINDER = 'Food will be ready for pickup or delivery. You can take preorders now.';
+
+function planReminderText(day) {
+  return day?.settings?.planReminder?.trim() || DEFAULT_PLAN_REMINDER;
+}
+
 function dayPlanReminder(day) {
-  const reminder = isPlannedDay(day) && day.settings.planReminder;
+  const reminder = isPlannedDay(day) && planReminderText(day);
   return reminder ? '<p class="day-plan-reminder"><strong>Reminder</strong> ' + esc(reminder) + '</p>' : '';
 }
 
@@ -372,13 +381,13 @@ function sharedDayForm(day = null) {
   modal(title, '<form id="sharedDayForm" class="form-body">' + dateField +
     '<p class="help">Confirm the date when food will be ready for pickup or delivery.</p>' +
     '<label class="field">Reminder for staff (optional)<textarea name="reminder" rows="3" maxlength="500">' +
-    esc(day?.settings?.planReminder || '') + '</textarea></label>' + drivers +
+    esc(planReminderText(day)) + '</textarea></label>' + drivers +
     '<button class="button primary" type="submit">' + (isPlannedDay(day) ? 'Save reminder' : 'Confirm planned day') + '</button></form>');
   if (!isEditing) {
     const form = $('#sharedDayForm');
     const refreshReminder = () => {
       const existing = sharedDays.find(item => isPlannedDay(item) && item.delivery_date === form.elements.date.value);
-      form.elements.reminder.value = existing?.settings.planReminder || '';
+      form.elements.reminder.value = planReminderText(existing);
     };
     form.elements.date.addEventListener('change', refreshReminder);
     refreshReminder();
