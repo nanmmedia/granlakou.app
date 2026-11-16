@@ -1,19 +1,19 @@
 'use strict';
 
 function sharedDayPicker() {
-  if (!sharedCan('orders')) return '';
+  if (!sharedCan('orders')) return dayPlanReminder(sharedActiveDay());
   const days = sharedDays.filter(day => !day.archived && day.delivery_date >= date())
     .sort((a, b) => a.delivery_date.localeCompare(b.delivery_date));
   const activeDay = sharedActiveDay();
   const selected = activeDay?.id;
   const options = days.map(day => '<option value="' + esc(day.id) + '"' +
     (day.id === selected ? ' selected' : '') + '>' + esc(day.delivery_date) +
-    (day.delivery_date === date() ? ' · Today' : ' · Planned') + '</option>').join('');
+    (isPlannedDay(day) ? ' · Planned' : day.delivery_date === date() ? ' · Today' : ' · Upcoming') + '</option>').join('');
   return '<div class="scheduled-day">' +
     (options ? '<label class="field">Order day<select id="scheduledDay">' + options + '</select></label>' : '') +
-    (activeDay?.delivery_date > date() ? '<span class="planned-tag">Planned</span>' : '') +
+    (isPlannedDay(activeDay) ? '<span class="planned-tag">Planned</span>' : '') +
     (sharedCan('manage') ? '<div class="day-actions"><button class="button" data-action="settings">Plan a day</button>' +
-      (selected ? '<button class="button danger" data-action="cancelDay">Cancel Day</button><button class="button" data-action="archive">Close Day</button>' : '') + '</div>' : '') + '</div>';
+      (selected ? '<button class="button" data-action="editDayPlan">' + (isPlannedDay(activeDay) ? 'Edit reminder' : 'Confirm this day') + '</button><button class="button danger" data-action="cancelDay">Cancel Day</button><button class="button" data-action="archive">Close Day</button>' : '') + '</div>' : '') + '</div>' + dayPlanReminder(activeDay);
 }
 
 function setSharedOrderType(form, type) {
@@ -214,7 +214,7 @@ function sharedDeliveryForm(id = '', customer = '', orderDate = (sharedSelectedD
   const unit = field('Apt, building, or suite (optional)', 'unit', contact.unit || '', 'text', 'maxlength="50" autocomplete="address-line2"');
   const steps = names.map((name, index) => '<li data-step-marker="' + (index + 1) + '">' + (index + 1) + '. ' + name + '</li>').join('');
   const type = '<label class="field">Order type<select name="orderType"><option value="delivery">Delivery</option><option value="pickup">Pickup</option></select></label>';
-  const dateField = id ? '' : field('Order date', 'orderDate', orderDate, 'date', 'required min="' + date() + '"');
+  const dateField = id ? '' : field('When is this order for?', 'orderDate', orderDate, 'date', 'required min="' + date() + '"');
   const fee = field('Delivery fee ($)', 'fee', order?.fee ?? state.settings.nearFee ?? 5, 'number', 'min="0" max="999" required step="0.01"');
 
   page.innerHTML = '<div class="order-page-heading"><h1>' + (id ? 'Edit order' : 'New Order') +
@@ -253,7 +253,12 @@ function sharedDeliveryForm(id = '', customer = '', orderDate = (sharedSelectedD
 
   const refreshPlannedDate = () => {
     const tag = form.querySelector('[data-planned-date-tag]');
-    if (tag) tag.hidden = !sharedDays.some(day => !day.archived && day.delivery_date === form.elements.orderDate.value && day.delivery_date > date());
+    const reminder = form.querySelector('[data-order-day-reminder]');
+    if (!tag || !reminder) return;
+    const day = sharedDays.find(day => isPlannedDay(day) && day.delivery_date === form.elements.orderDate.value);
+    tag.hidden = !day;
+    reminder.textContent = day?.settings?.planReminder || '';
+    reminder.hidden = !reminder.textContent;
   };
   refreshPlannedDate();
   form.elements.orderDate?.addEventListener('input', refreshPlannedDate);
@@ -320,13 +325,13 @@ function fillSharedOrderContact(form, id) {
 }
 
 function plannedOrderDates() {
-  const days = sharedDays.filter(day => !day.archived && day.delivery_date > date())
+  const days = sharedDays.filter(day => isPlannedDay(day) && day.delivery_date >= date())
     .sort((a, b) => a.delivery_date.localeCompare(b.delivery_date));
   if (!days.length) return '';
   const buttons = days.map(day => '<button type="button" class="button planned-tag" data-planned-order-date="' +
     esc(day.delivery_date) + '">' + esc(day.delivery_date) + '</button>').join('');
   return '<div class="planned-dates"><span>Planned</span>' + buttons + '</div>' +
-    '<p class="order-date-state"><span class="planned-tag" data-planned-date-tag hidden>Planned</span></p>';
+    '<p class="order-date-state"><span class="planned-tag" data-planned-date-tag hidden>Planned</span></p><p class="day-plan-reminder" data-order-day-reminder hidden></p>';
 }
 
 function sharedCancelDayForm() {
@@ -345,4 +350,38 @@ function sharedCancelDayForm() {
     '</p><p>You can plan this date again before it passes.</p><div class="form-actions">' +
     '<button type="button" class="button" data-action="close">Keep day</button>' +
     '<button type="submit" class="button danger">Confirm cancellation</button></div></form>');
+}
+
+function isPlannedDay(day) {
+  return Boolean(day && !day.archived && day.settings?.planned === true);
+}
+
+function dayPlanReminder(day) {
+  const reminder = isPlannedDay(day) && day.settings.planReminder;
+  return reminder ? '<p class="day-plan-reminder"><strong>Reminder</strong> ' + esc(reminder) + '</p>' : '';
+}
+
+function sharedDayForm(day = null) {
+  if (!sharedCan('manage')) throw Error('Business Admin access required.');
+  const isEditing = Boolean(day);
+  const dateField = field('When will food be ready?', 'date', day?.delivery_date || date(), 'date',
+    'required min="' + date() + '"' + (isEditing ? ' readonly' : ''));
+  const drivers = isEditing ? '' : '<label class="field">Drivers for this day<select name="drivers">' +
+    '<option value="1">1 driver</option><option value="2">2 drivers · west / east</option></select></label>';
+  const title = isPlannedDay(day) ? 'Edit reminder' : 'Confirm a planned day';
+  modal(title, '<form id="sharedDayForm" class="form-body">' + dateField +
+    '<p class="help">Confirm the date when food will be ready for pickup or delivery.</p>' +
+    '<label class="field">Reminder for staff (optional)<textarea name="reminder" rows="3" maxlength="500">' +
+    esc(day?.settings?.planReminder || '') + '</textarea></label>' + drivers +
+    '<button class="button primary" type="submit">' + (isPlannedDay(day) ? 'Save reminder' : 'Confirm planned day') + '</button></form>');
+  if (!isEditing) {
+    const form = $('#sharedDayForm');
+    const refreshReminder = () => {
+      const existing = sharedDays.find(item => isPlannedDay(item) && item.delivery_date === form.elements.date.value);
+      form.elements.reminder.value = existing?.settings.planReminder || '';
+    };
+    form.elements.date.addEventListener('change', refreshReminder);
+    refreshReminder();
+  }
+
 }

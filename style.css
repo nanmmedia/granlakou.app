@@ -110,3 +110,4 @@ main#orderPage { width: min(100% - 32px, 900px); margin: 30px auto 64px; }
   .order-page-form .field :is(input,select,textarea) { width: 100%; }
   .order-page-form .address-locality { grid-template-columns: minmax(0, 90px) minmax(0, 1fr); }
 }
+.day-plan-reminder { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px 14px; background: #f1f5eb; border-radius: 10px; }
