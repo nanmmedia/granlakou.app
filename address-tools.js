@@ -4,10 +4,12 @@ const censusAddressCache = new Map();
 const checkAddressWithPhoton = checkAddress;
 let activeAddressCheck = null;
 
-function missingAddressMessage(kitchen) {
+function missingAddressMessage(kitchen, address = '') {
   return kitchen
     ? '<p>No house-number match. Check the street address and ZIP code.</p><button type="button" class="button" data-action="alternateAddress" data-kitchen="true">Try US Census address lookup</button>'
-    : '<p>No address match. Ask the customer for their house number, street, city, state, and ZIP code. Ask for an apartment or unit number if needed.</p>';
+    : splitContactAddress(address).postalCode
+      ? '<p>No address match. Double-check the spelling and ZIP code with the customer, or ask them to send a Maps link.</p>'
+      : '<p>No address match. Ask the customer for their ZIP code and confirm the street address.</p>';
 }
 
 async function alternateAddress(kitchen = false) {
@@ -46,7 +48,8 @@ async function alternateAddress(kitchen = false) {
         addressMatches.map((match, index) => '<button type="button" class="address-match" data-action="chooseAddress" data-id="' +
           index + '">' + esc(match.label) + '</button>').join('') +
         '</div><p class="help">US Census location estimate.</p>'
-      : missingAddressMessage(false);
+      : missingAddressMessage(false, address);
+    return current() && matches.length > 0;
   } catch {
     if (current()) output.textContent = 'US Census lookup is unavailable. Try checking again in a moment.';
   }
@@ -70,15 +73,17 @@ checkAddress = async function(kitchen = false, automatic = false) {
   check.promise = (async () => {
     try {
       if (useCensus) {
-        await alternateAddress();
-        return;
+        const matched = await alternateAddress();
+        if (matched || check.generation !== addressSearchGeneration ||
+            !input?.isConnected || input.value.trim() !== address) return;
+        check.generation++;
       }
       await checkAddressWithPhoton(kitchen, automatic);
       if (check.generation !== addressSearchGeneration || addressMatches.length ||
           (input && (input.isConnected === false || input.value.trim() !== address))) return;
       const target = output || $('#addressCheck');
       if (address && target && !target.textContent.startsWith('Address suggestions are unavailable')) {
-        target.innerHTML = missingAddressMessage(kitchen);
+        target.innerHTML = missingAddressMessage(kitchen, address);
       }
     } finally {
       if (activeAddressCheck === check || activeAddressCheck?.input !== input) button?.removeAttribute('aria-busy');

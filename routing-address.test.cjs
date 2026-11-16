@@ -43,7 +43,8 @@ test('one manual tap uses Census and repeated taps share the result', async () =
     state: {settings: {}}, sharedReset() {}, sharedBusiness: {id:'example'}, authUser: {},
     addressUnit: query => ({query, unit:''}), locationKey: query => query,
     initAuth: async () => ({functions:{invoke: () => {requests++; return new Promise(resolve => {finish = resolve;});}}}),
-    checkAddress: () => assert.fail('Manual delivery checks should start with Census'),
+    splitContactAddress: () => ({postalCode:''}),
+    checkAddress: () => {assert.equal(requests, 1);context.addressSearchGeneration++;},
   });
   vm.runInContext(fs.readFileSync(require('node:path').join(__dirname, 'address-tools.js'), 'utf8'), context);
   const lookup = context.checkAddress(false);
