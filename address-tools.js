@@ -8,8 +8,12 @@ function missingAddressMessage(kitchen, address = '') {
   return kitchen
     ? '<p>No house-number match. Check the street address and ZIP code.</p><button type="button" class="button" data-action="alternateAddress" data-kitchen="true">Try US Census address lookup</button>'
     : splitContactAddress(address).postalCode
-      ? '<p>No address match. Double-check the spelling and ZIP code with the customer, or ask them to send a Maps link.</p>'
+      ? '<p>No address match. Double-check the spelling and ZIP code with the customer, or ask them to send a Maps link.</p><a class="button" target="_blank" rel="noopener" href="' + esc(navigation(address)) + '">Open in Maps ↗</a>'
       : '<p>No address match. Ask the customer for their ZIP code and confirm the street address.</p>';
+}
+
+function addressMatchKey(address) {
+  return addressUnit(address).query.toLowerCase().replace(/[,.]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 async function alternateAddress(kitchen = false) {
@@ -37,11 +41,22 @@ async function alternateAddress(kitchen = false) {
       const {data, error} = await client.functions.invoke('geocode-address', {body: {address: query, business}});
       if (error) throw error;
       matches = data?.matches || [];
+      const withoutZip = query.replace(/,?\s+\d{5}(?:-\d{4})?$/, '');
+      if (!kitchen && !matches.length && withoutZip !== query && current()) {
+        const retry = await client.functions.invoke('geocode-address', {body: {address: withoutZip, business}});
+        if (!retry.error) matches = retry.data?.matches || [];
+      }
       if (censusAddressCache.size >= 50) censusAddressCache.delete(censusAddressCache.keys().next().value);
       censusAddressCache.set(key, {matches, time: Date.now()});
     }
     if (!current()) return;
     addressMatches = matches.map(match => ({...match, address, kitchen, unit: addressUnit(address).unit}));
+    const exact = !kitchen && addressMatches.length === 1 &&
+      addressMatchKey(addressMatches[0].formattedAddress || addressMatches[0].label) === addressMatchKey(address);
+    if (exact) {
+      await chooseAddress(0);
+      return true;
+    }
     output.innerHTML = addressMatches.length
       ? '<p>Review the full address and choose the match to check driving miles.</p>' +
         '<div class="address-suggestions" role="group" aria-label="Matching addresses">' +
@@ -72,6 +87,19 @@ checkAddress = async function(kitchen = false, automatic = false) {
   activeAddressCheck = check;
   check.promise = (async () => {
     try {
+      if (!kitchen && !automatic && address && output && state.locations?.[locationKey(address)]) {
+        addressSearchGeneration++;
+        addressMatches = [];
+        output.textContent = 'Calculating driving miles…';
+        const current = () => check.generation === addressSearchGeneration && input?.isConnected && input.value.trim() === address;
+        try {
+          await calculateMileage(address);
+          if (current()) output.textContent = mileageLabel(address);
+        } catch (error) {
+          if (current()) output.textContent = 'Address matched. ' + error.message;
+        }
+        return;
+      }
       if (useCensus) {
         const matched = await alternateAddress();
         if (matched || check.generation !== addressSearchGeneration ||

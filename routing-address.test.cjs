@@ -55,4 +55,11 @@ test('one manual tap uses Census and repeated taps share the result', async () =
   await Promise.all([lookup, tap]);
   assert.match(output.innerHTML, /Ask the customer/);
   assert.doesNotMatch(output.innerHTML, /map pin|Try US Census/);
+  context.state.locations = {'12 Example St': {lat:39.8, lon:-86.2}};
+  context.calculateMileage = async address => assert.equal(address, input.value);
+  context.mileageLabel = () => '2.7 driving miles from kitchen';
+  await context.checkAddress(false);
+  assert.equal(requests, 1);
+  assert.equal(output.textContent, '2.7 driving miles from kitchen');
+
 });
