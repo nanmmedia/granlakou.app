@@ -31,7 +31,7 @@ test('replanning honors the second driver’s assigned first stop',()=>{
   assert.equal(planner.planBatch(entries,matrix([0,1,10]),{firstId:'first'}).route[0].d.id,'first');
 });
 
-test('one address check keeps its Census fallback when tapped again during lookup', async () => {
+test('one manual tap uses Census and repeated taps share the result', async () => {
   const vm = require('node:vm');
   const fs = require('node:fs');
   const input = {value: '12 Example St', isConnected: true};
@@ -40,19 +40,18 @@ test('one address check keeps its Census fallback when tapped again during looku
   const context = vm.createContext({
     $: () => output, addressForm: () => ({querySelector: selector => selector.startsWith('[name=') ? input : null}),
     addressMatches: [], addressSearchGeneration: 0, addressSearchTimer: null, clearTimeout() {},
-    state: {settings: {}}, sharedReset() {},
-    checkAddress: () => {
-      requests++;
-      context.addressSearchGeneration++;
-      return new Promise(resolve => { finish = resolve; });
-    },
+    state: {settings: {}}, sharedReset() {}, sharedBusiness: {id:'example'}, authUser: {},
+    addressUnit: query => ({query, unit:''}), locationKey: query => query,
+    initAuth: async () => ({functions:{invoke: () => {requests++; return new Promise(resolve => {finish = resolve;});}}}),
+    checkAddress: () => assert.fail('Manual delivery checks should start with Census'),
   });
   vm.runInContext(fs.readFileSync(require('node:path').join(__dirname, 'address-tools.js'), 'utf8'), context);
-  vm.runInContext("addressFallbackControls = () => 'Try US Census address lookup'", context);
-  const lookup = context.checkAddress(false, true);
+  const lookup = context.checkAddress(false);
   const tap = context.checkAddress(false);
+  await new Promise(setImmediate);
   assert.equal(requests, 1);
-  finish();
+  finish({data:{matches:[]}});
   await Promise.all([lookup, tap]);
-  assert.equal(output.innerHTML, 'Try US Census address lookup');
+  assert.match(output.innerHTML, /Ask the customer/);
+  assert.doesNotMatch(output.innerHTML, /map pin|Try US Census/);
 });
