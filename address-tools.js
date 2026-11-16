@@ -130,3 +130,40 @@ sharedReset = function() {
   clearTimeout(addressSearchTimer);
   sharedResetBeforeAddressTools();
 };
+
+const workspaceOrigins = new Map();
+async function ensureWorkspaceOrigin() {
+  const address = state.settings.kitchen;
+  if (!address) throw Error('Set the workspace address in Business settings.');
+  const key = locationKey(address);
+  if (state.locations[key]) return state.locations[key];
+  if (!workspaceOrigins.has(key)) {
+    const lookup = async () => {
+      const matchesOrigin = match => workspaceAddressKey(match.formattedAddress || match.label) === workspaceAddressKey(address);
+      try {
+        const data = await fetchPublic('https://photon.komoot.io/api/?limit=5&lang=en&lat=39.83&lon=-86.25&q=' + encodeURIComponent(address));
+        const exact = addressCandidates(data, address, true).find(matchesOrigin);
+        if (exact) return exact;
+      } catch {
+        // Census can still resolve the origin when the map lookup is unavailable.
+      }
+      const client = await initAuth();
+      const {data, error} = await client.functions.invoke('geocode-address', {
+        body: {address, business: sharedBusiness.id}
+      });
+      const exact = !error && data?.matches?.find(matchesOrigin);
+      if (exact) return exact;
+      throw Error('Could not locate the workspace address. Review it in Business settings.');
+    };
+    workspaceOrigins.set(key, lookup().finally(() => workspaceOrigins.delete(key)));
+  }
+  const point = await workspaceOrigins.get(key);
+  if (locationKey(state.settings.kitchen) !== key) throw Error('Workspace changed. Check miles again.');
+  state.locations[key] = {...point, address};
+  return state.locations[key];
+}
+
+function workspaceAddressKey(address) {
+  const suffixes = {indiana:'in', street:'st', avenue:'ave', drive:'dr', road:'rd', court:'ct', boulevard:'blvd', lane:'ln', place:'pl'};
+  return addressMatchKey(address).split(' ').map(word => suffixes[word] || word).join(' ');
+}
