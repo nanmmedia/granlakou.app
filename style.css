@@ -47,3 +47,43 @@ header{gap:28px}.business-context{margin-right:auto;min-width:0;max-width:430px}
   color: #713d13;
 }
 .address-check-button[aria-busy="true"] { cursor: progress; }
+
+.order-page-open #dashboard,
+.order-page-open #mobileNav { display: none !important; }
+main#orderPage { width: min(100% - 32px, 900px); margin: 30px auto 64px; }
+.order-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.order-page-heading h1 { margin: 0; font-size: clamp(32px, 5vw, 48px); }
+.order-steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 20px 0; }
+.order-steps li { padding: 11px 6px; border: 1px solid #c8d3c6; border-radius: 12px; text-align: center; font-weight: 700; }
+.order-steps [aria-current="step"] { background: #dcead2; border-color: #aec4a2; }
+.order-page-form { background: #fff; border: 1px solid #c8d3c6; border-radius: 20px; padding: clamp(18px, 4vw, 40px); }
+.order-page-form h2 { margin: 0 0 22px; font-size: clamp(23px, 4vw, 30px); }
+.order-page-form .field, .order-page-form legend { color: #173e35; font-size: 15px; font-weight: 750; }
+.order-page-form .field :is(input,select,textarea) { min-height: 50px; color: #173e35; border-color: #a7b7aa; font-size: 16px; }
+.order-page-form .help { color: #47594f; font-size: 13px; }
+.order-fields-grid, .address-street-row:has([name="unit"]) {
+  display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 14px; align-items: end;
+}
+.order-page-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 26px; }
+.order-page-form .button, .order-page-heading .button { min-height: 46px; }
+.order-option, .order-notes { display: block; background: #f1f5eb; border: 1px solid #b9c9b6; border-radius: 12px; padding: 14px; margin: 16px 0; font-weight: 750; font-size: 16px; }
+.order-option { display: flex; align-items: center; gap: 12px; min-height: 52px; cursor: pointer; }
+.order-option input { width: 22px; height: 22px; accent-color: #173e35; }
+.order-notes summary { cursor: pointer; }
+.order-notes .field { margin-top: 14px; margin-bottom: 0; }
+#dashboard > .tabs { margin-top: 0; }
+@media(max-width:720px) {
+  main#orderPage { margin-top: 18px; }
+  .order-fields-grid, .address-street-row:has([name="unit"]) { grid-template-columns: 1fr; gap: 0; }
+  .mobile-nav:not([hidden]) {
+    bottom: calc(14px + env(safe-area-inset-bottom)); left: 8px; right: 8px;
+    padding: 6px; gap: 4px; border: 1px solid #aabfae; background: #edf4e7;
+    border-radius: 18px; box-shadow: none;
+  }
+  .mobile-nav button { min-height: 48px; color: #173e35; box-shadow: none; }
+  .mobile-nav button[aria-current] { background: #cce4c1; color: #173e35; box-shadow: none; }
+  .mobile-nav button[data-action="add"] {
+    flex: 0 0 86px; background: #ffd78f; color: #542b0c; box-shadow: none; padding-inline: 3px;
+  }
+}
+.order-form-error { color: #713d13; background: #fff0d5; padding: 12px; border-radius: 8px; }
