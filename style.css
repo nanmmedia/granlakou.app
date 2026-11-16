@@ -40,3 +40,10 @@ header{gap:28px}.business-context{margin-right:auto;min-width:0;max-width:430px}
 .pickup-list{margin-top:18px}
 
 .driver-assignment{display:flex;justify-content:flex-end;margin:0 0 12px}
+
+.address-check-button.needs-address-check {
+  background: #fff0d5;
+  border-color: #dfb977;
+  color: #713d13;
+}
+.address-check-button[aria-busy="true"] { cursor: progress; }

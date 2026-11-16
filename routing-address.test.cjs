@@ -30,3 +30,29 @@ test('replanning honors the second driver’s assigned first stop',()=>{
   const entries=[{i:1,d:{id:'near'}},{i:2,d:{id:'first'}}];
   assert.equal(planner.planBatch(entries,matrix([0,1,10]),{firstId:'first'}).route[0].d.id,'first');
 });
+
+test('one address check keeps its Census fallback when tapped again during lookup', async () => {
+  const vm = require('node:vm');
+  const fs = require('node:fs');
+  const input = {value: '12 Example St', isConnected: true};
+  const output = {textContent: '', innerHTML: ''};
+  let finish, requests = 0;
+  const context = vm.createContext({
+    $: () => output, addressForm: () => ({querySelector: selector => selector.startsWith('[name=') ? input : null}),
+    addressMatches: [], addressSearchGeneration: 0, addressSearchTimer: null, clearTimeout() {},
+    state: {settings: {}}, sharedReset() {},
+    checkAddress: () => {
+      requests++;
+      context.addressSearchGeneration++;
+      return new Promise(resolve => { finish = resolve; });
+    },
+  });
+  vm.runInContext(fs.readFileSync(require('node:path').join(__dirname, 'address-tools.js'), 'utf8'), context);
+  vm.runInContext("addressFallbackControls = () => 'Try US Census address lookup'", context);
+  const lookup = context.checkAddress(false, true);
+  const tap = context.checkAddress(false);
+  assert.equal(requests, 1);
+  finish();
+  await Promise.all([lookup, tap]);
+  assert.equal(output.innerHTML, 'Try US Census address lookup');
+});
