@@ -4,13 +4,16 @@ function sharedDayPicker() {
   if (!sharedCan('orders')) return '';
   const days = sharedDays.filter(day => !day.archived && day.delivery_date >= date())
     .sort((a, b) => a.delivery_date.localeCompare(b.delivery_date));
-  const selected = sharedActiveDay()?.id;
+  const activeDay = sharedActiveDay();
+  const selected = activeDay?.id;
   const options = days.map(day => '<option value="' + esc(day.id) + '"' +
     (day.id === selected ? ' selected' : '') + '>' + esc(day.delivery_date) +
-    (day.delivery_date === date() ? ' · Today' : ' · Upcoming') + '</option>').join('');
+    (day.delivery_date === date() ? ' · Today' : ' · Planned') + '</option>').join('');
   return '<div class="scheduled-day">' +
     (options ? '<label class="field">Order day<select id="scheduledDay">' + options + '</select></label>' : '') +
-    (sharedCan('manage') ? '<button class="button" data-action="settings">Plan a day</button>' : '') + '</div>';
+    (activeDay?.delivery_date > date() ? '<span class="planned-tag">Planned</span>' : '') +
+    (sharedCan('manage') ? '<div class="day-actions"><button class="button" data-action="settings">Plan a day</button>' +
+      (selected ? '<button class="button danger" data-action="cancelDay">Cancel Day</button><button class="button" data-action="archive">Close Day</button>' : '') + '</div>' : '') + '</div>';
 }
 
 function setSharedOrderType(form, type) {
@@ -219,7 +222,7 @@ function sharedDeliveryForm(id = '', customer = '', orderDate = (sharedSelectedD
     '<ol class="order-steps" aria-label="Order steps">' + steps + '</ol>' +
     '<form id="deliveryForm" class="order-page-form" novalidate data-id="' + esc(id) +
     '" data-day="' + esc(sharedActiveDay()?.id || '') + '" data-customer="' + esc(contact.customerId || contact.id || '') + '">' +
-    '<section data-order-step="1"><h2 tabindex="-1">Customer & delivery</h2>' + dateField + type + savedCustomers +
+    '<section data-order-step="1"><h2 tabindex="-1">Customer & delivery</h2>' + dateField + (id ? '' : plannedOrderDates()) + type + savedCustomers +
     '<div class="order-fields-grid">' +
     field('Customer name', 'name', contact.name, 'text', 'required maxlength="100" autocomplete="name"') +
     field('Phone number', 'phone', formatContactPhone(contact.phone), 'tel', 'required maxlength="25" autocomplete="tel"') +
@@ -248,6 +251,16 @@ function sharedDeliveryForm(id = '', customer = '', orderDate = (sharedSelectedD
   if (savedCustomers) $('#savedCustomer').value = customer;
   form.elements.orderType.value = order?.orderType || 'delivery';
 
+  const refreshPlannedDate = () => {
+    const tag = form.querySelector('[data-planned-date-tag]');
+    if (tag) tag.hidden = !sharedDays.some(day => !day.archived && day.delivery_date === form.elements.orderDate.value && day.delivery_date > date());
+  };
+  refreshPlannedDate();
+  form.elements.orderDate?.addEventListener('input', refreshPlannedDate);
+  for (const button of form.querySelectorAll('[data-planned-order-date]')) button.addEventListener('click', () => {
+    form.elements.orderDate.value = button.dataset.plannedOrderDate;
+    refreshPlannedDate();
+  });
   const updateOptions = () => {
     const pickup = form.elements.orderType.value === 'pickup';
     applyOrderType(form);
@@ -304,4 +317,32 @@ function fillSharedOrderContact(form, id) {
   addressMatches = [];
   $('#addressCheck').textContent = mileageLabel(address);
   updateAddressCheckCue(form);
+}
+
+function plannedOrderDates() {
+  const days = sharedDays.filter(day => !day.archived && day.delivery_date > date())
+    .sort((a, b) => a.delivery_date.localeCompare(b.delivery_date));
+  if (!days.length) return '';
+  const buttons = days.map(day => '<button type="button" class="button planned-tag" data-planned-order-date="' +
+    esc(day.delivery_date) + '">' + esc(day.delivery_date) + '</button>').join('');
+  return '<div class="planned-dates"><span>Planned</span>' + buttons + '</div>' +
+    '<p class="order-date-state"><span class="planned-tag" data-planned-date-tag hidden>Planned</span></p>';
+}
+
+function sharedCancelDayForm() {
+  const day = sharedActiveDay();
+  if (!sharedCan('manage') || !day) throw Error('Choose an open order day as a Business Admin.');
+  const orders = state.deliveries;
+  if (orders.some(order => order.paid || order.method || ['in_progress', 'delivered'].includes(order.originalStatus || order.status))) {
+    throw Error('This day has started orders or recorded payments. Resolve those orders and use Close Day.');
+  }
+  if (orders.some(order => order.handoffId)) throw Error('Resolve pending driver handoffs first.');
+  const detail = orders.length
+    ? 'This will discard ' + orders.length + ' ' + (orders.length === 1 ? 'order' : 'orders') + ' from the schedule and reports.'
+    : 'This will remove the empty day from the schedule.';
+  modal('Cancel Day', '<form id="sharedCancelDayForm" class="form-body" data-id="' + esc(day.id) +
+    '"><p><strong>' + esc(day.delivery_date) + '</strong></p><p>' + detail +
+    '</p><p>You can plan this date again before it passes.</p><div class="form-actions">' +
+    '<button type="button" class="button" data-action="close">Keep day</button>' +
+    '<button type="submit" class="button danger">Confirm cancellation</button></div></form>');
 }

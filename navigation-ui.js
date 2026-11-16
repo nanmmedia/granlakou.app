@@ -26,3 +26,18 @@ function sharedMoreMenu() {
   modal('Your workspace', '<div class="form-body more-menu">' + content + '</div>');
 }
 function routeLegMarkup(d){const leg=d.routeLeg;if(!leg||!Number.isFinite(leg.miles)||!Number.isFinite(leg.seconds))return '';const labels={kitchen:'kitchen',current_stop:'current stop',last_completed:'last completed stop',previous_stop:'previous stop'};return `<p class="route-leg">Planned leg: ${esc(leg.miles.toFixed(1))} miles · ${esc(String(Math.max(1,Math.round(leg.seconds/60))))} min from ${esc(labels[leg.kind]||'previous stop')}<small>Driving estimate · no live traffic</small></p>`;}
+
+function sharedTabHeading(firstName) {
+  const copy = {
+    today: [firstName ? 'Hi, ' + firstName + '.' : 'Welcome back.', 'See what’s ready for pickup, what’s on the road, and what’s next.'],
+    items: ['Your menu', 'Manage the items and prices staff use to take orders.'],
+    customers: ['Your customers', 'Find a saved customer and start their next order.'],
+    history: ['Past order days', 'Look back at orders, payments, and receipts.'],
+    summary: ['Day summary', 'Review order totals and payments for a selected date.'],
+    activity: sharedCan('orders') ? ['Day activity', 'See what changed and who made the update.'] : ['My activity', 'See the delivery updates you recorded.'],
+    team: ['Staff access', 'Manage who can work in this workspace.']
+  };
+  const [title, subtitle] = copy[tab] || copy.today;
+  $('#greeting').textContent = title;
+  document.querySelector('.intro .sub').textContent = subtitle;
+}

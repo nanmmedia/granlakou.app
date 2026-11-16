@@ -93,3 +93,20 @@ main#orderPage { width: min(100% - 32px, 900px); margin: 30px auto 64px; }
 .more-section h3 { color: #34534a; font-size: 13px; margin: 1px 8px 6px; }
 .more-section .button { min-height: 44px; width: 100%; text-align: left; justify-content: flex-start; padding-inline: 12px; border-color: transparent; }
 .more-section .button[data-action="signout"] { color: #713d13; }
+
+.scheduled-day > *, .day-actions { min-width: 0; max-width: 100%; }
+.scheduled-day select { width: 100%; min-width: 0; max-width: 100%; }
+.day-actions, .planned-dates { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.planned-tag { display: inline-flex; align-items: center; padding: 5px 10px; background: #d9ed9b; color: #173e35; border-radius: 999px; font-size: 13px; font-weight: 750; }
+.planned-dates { margin-bottom: 12px; }
+.planned-dates .button { min-height: 44px; }
+.order-date-state { margin: 0; }
+.order-date-state:has([hidden]) { display: none; }
+@media(max-width:720px) {
+  body:not(.auth-page) #identity { display: none; }
+  .scheduled-day .field { flex: 1 1 170px; min-width: 0; }
+  .scheduled-day .day-actions { flex: 1 1 100%; }
+  .order-page-form :is(.field,.address-group,.order-item), .order-page-form :is(input,select,textarea) { min-width: 0; max-width: 100%; }
+  .order-page-form .field :is(input,select,textarea) { width: 100%; }
+  .order-page-form .address-locality { grid-template-columns: minmax(0, 90px) minmax(0, 1fr); }
+}
