@@ -2,6 +2,10 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-17 — Persistent header
+
+- Keep the header visible while scrolling on phones and desktop, with an opaque background and space preserved above page content.
+
 ## 2026-11-13 — Scheduled orders, pickups and PDF receipts
 
 - Open today or an upcoming date with its own kitchen address. Find past days in History.

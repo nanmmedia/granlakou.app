@@ -149,3 +149,9 @@ main#orderPage { width: min(100% - 32px, 900px); margin: 30px auto 64px; }
 @media(max-width:350px) {
   .order-schedule-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
+
+/* Keep the app header visible without taking content out of the page flow. */
+body > header { position: sticky; top: 0; z-index: 40; background: var(--paper); }
+html { scroll-padding-top: 112px; }
+@media (max-width: 720px) { html { scroll-padding-top: 98px; } }
+@media print { body > header { position: static; } }
