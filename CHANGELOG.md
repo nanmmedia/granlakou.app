@@ -2,6 +2,13 @@
 
 Changes are tracked here and in GitHub commits. Dates use Indianapolis time. Customer records and personal profile values do not belong in this log.
 
+## 2026-11-19 — Order cancellation, order taker and readable times
+
+- Show Cancel Order directly on delivery cards and details for authorized order staff. Require a reason, preserve history, and protect paid/completed orders and pending handoffs.
+- Show the original order taker’s name and creation time on delivery and pickup cards. Retrieve names through business-scoped access without account emails or roles.
+- Format deadlines, legacy arrival estimates and activity times with AM/PM in Indianapolis time.
+- Validation: 81 automated checks and rollback database checks for cancellation, attribution and driver privacy.
+
 ## 2026-11-17 — Persistent header
 
 - Keep the header visible while scrolling on phones and desktop, with an opaque background and space preserved above page content.

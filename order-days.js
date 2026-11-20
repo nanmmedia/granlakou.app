@@ -55,12 +55,12 @@ function sharedPickupList() {
     if (order.status === 'ready') {
       actions = (sharedActiveDay().delivery_date === date() ? '<button class="button lime" data-action="pickupComplete" data-id="' + id + '">Mark picked up</button>' : '') +
         '<button class="button" data-action="edit" data-id="' + id + '">Edit</button>' +
-        '<button class="button" data-action="cancelOrder" data-id="' + id + '">Cancel order</button>';
+        '<button class="button" data-action="cancelOrder" data-id="' + id + '">Cancel Order</button>';
     }
     if (order.status === 'delivered') actions = '<button class="button" data-action="receipt" data-id="' + id + '">Receipt ↗</button>';
     return '<div class="activity"><strong>' + esc(order.name) + '</strong> · ' + esc(status) +
       '<p>' + esc(orderSummary(order)) + ' · ' + money(total(order)) + '</p>' +
-      '<div class="stop-actions">' + actions + '</div></div>';
+      sharedOrderTakenBy(order) + '<div class="stop-actions">' + actions + '</div></div>';
   }).join('');
   return '<section class="panel pickup-list"><div class="panel-head"><h2>Pickups</h2><span>' + orders.length +
     ' orders</span></div>' + (cards || '<div class="empty">No pickups scheduled.</div>') + '</section>';

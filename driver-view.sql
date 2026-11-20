@@ -4,7 +4,7 @@ begin
  if not gldd_private.has_business_role(business,array['business_admin','driver']) then raise exception 'Driver access required';end if;
  select * into current_day from public.bjta_days where business_id=business and not archived and delivery_date=(now() at time zone 'America/Indiana/Indianapolis')::date order by created_at desc limit 1;
  if not found then return jsonb_build_object('days','[]'::jsonb,'rows','[]'::jsonb,'events','[]'::jsonb);end if;
- select coalesce(jsonb_agg(jsonb_build_object('id',d.id,'day_id',d.day_id,'status',d.status,'claimed_by',d.claimed_by,'assigned_to',d.assigned_to,'started_at',d.started_at,'completed_at',d.completed_at,'created_at',d.created_at,
+ select coalesce(jsonb_agg(jsonb_build_object('id',d.id,'day_id',d.day_id,'status',d.status,'claimed_by',d.claimed_by,'assigned_to',d.assigned_to,'started_at',d.started_at,'completed_at',d.completed_at,'created_at',d.created_at,'taken_by_name',(select case when nullif(trim(s.display_name),'') is null or position('@' in s.display_name)>0 or lower(trim(s.display_name)) in ('super admin','business admin','order staff','driver','staff') then 'Staff member' else trim(s.display_name) end from public.bjta_staff s where s.business_id=business and s.user_id=d.created_by),
  'amount_visible',coalesce(d.claimed_by=auth.uid() or d.assigned_to=auth.uid(),false),
  'paid',case when d.claimed_by=auth.uid() or d.assigned_to=auth.uid() then d.paid else false end,
  'payment_method',case when d.claimed_by=auth.uid() or d.assigned_to=auth.uid() then d.payment_method else null end,

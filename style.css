@@ -155,3 +155,5 @@ body > header { position: sticky; top: 0; z-index: 40; background: var(--paper);
 html { scroll-padding-top: 112px; }
 @media (max-width: 720px) { html { scroll-padding-top: 98px; } }
 @media print { body > header { position: static; } }
+
+.order-attribution { font-size: 12px; line-height: 1.6; color: var(--muted); margin: 8px 0; }
